@@ -1,24 +1,28 @@
 import anthropic
 import os
-import csv
+from openpyxl import load_workbook
 from dotenv import load_dotenv
 
 load_dotenv()
 
 client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 
-# CSVファイルから食材データを読み込む
+# Excelファイルから食材データを読み込む
+wb = load_workbook("food_prices.xlsx")
+ws = wb["食材価格"]
+
 food_items = []
-with open("food_prices.csv", encoding="utf-8") as f:
-    reader = csv.DictReader(f)
-    for row in reader:
-        food_items.append({
-            "カテゴリ": row["カテゴリ"],
-            "名前": row["名前"],
-            "先月": int(row["先月"]),
-            "今月": int(row["今月"]),
-            "単位": row["単位"],
-        })
+# 2行目から最終行まで読み込む（1行目はヘッダー）
+for row in ws.iter_rows(min_row=2, values_only=True):
+    if row[0] is None:  # 空行はスキップ
+        continue
+    food_items.append({
+        "カテゴリ": row[0],
+        "名前": row[1],
+        "先月": int(row[2]),
+        "今月": int(row[3]),
+        "単位": row[4],
+    })
 
 print(f"=== {len(food_items)}品目のデータを読み込みました ===\n")
 
